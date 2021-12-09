@@ -16,13 +16,16 @@ namespace RPGSzimulacio
             protected int mindmg;
             protected int maxdmg;
             protected static Random g = new Random();
+            public static List<Lény> lista = new List<Lény>();
 
+            public bool Él { get => 0 < hp; }
             public Lény(string nev, int hp, int mindmg, int maxdmg)
             {
                 this.nev = nev;
                 this.hp = hp;
                 this.mindmg = mindmg;
                 this.maxdmg = maxdmg;
+                Lény.lista.Add(this);
             }
 
             public override string ToString() => $" név: {nev}\n hp:{hp}\n sebzés:{mindmg}-{maxdmg}\n";
@@ -30,11 +33,22 @@ namespace RPGSzimulacio
             { 
 
             }
+
+
+            public static void Randomsorrend() // Fisher-Yates algoritmus?
+            {
+                for (int i = 0; i < Lény.lista.Count-1; i++)
+                {
+                    int r = g.Next(i + 1, lista.Count);
+                    (lista[i], lista[r]) = (lista[r], lista[i]);
+                }
+            }
         }
 
         class Barbár:Lény
         {
             bool kipihent;
+
             public Barbár(string nev, int hp, int mindmg, int maxdmg):base(nev, hp, mindmg, maxdmg)
             {
                 kipihent = true;
@@ -61,6 +75,7 @@ namespace RPGSzimulacio
         {
             public Mágus(string nev, int hp, int mindmg, int maxdmg) : base(nev, hp, mindmg, maxdmg)
             {
+
             }
 
             public override string ToString() => $"kaszt: Mágus\n" + base.ToString();
@@ -75,34 +90,42 @@ namespace RPGSzimulacio
 
         static void Main(string[] args)
         {
-            Lény Bence = new Lény("Bence",40,9,20);
+            //Lény Bence = new Lény("Bence",40,9,20);
             Barbár Gyuszó = new Barbár("Gyuszó", 60, 15, 35);
             Mágus Csege = new Mágus("Csege", 20, 30, 40);
 
-            
-            Console.WriteLine(Gyuszó);
-            Console.WriteLine(Csege);
+            int csegewon = 0;
+            int gyuszowon = 0;
 
-            Gyuszó.Attack(Csege);
+            for (int i = 0; i < 5000; i++)
+            {
 
-            Console.WriteLine(Gyuszó);
-            Console.WriteLine(Csege);
 
-            Csege.Attack(Gyuszó);
+                while (Gyuszó.Él && Csege.Él) // Mortal Kombat
+                {
+                    Lény.Randomsorrend();
+                    Lény.lista[0].Attack(Lény.lista[1]);
+                    Console.WriteLine(Lény.lista[1]);
+                    if (Lény.lista[1].Él)
+                    {
+                        Lény.lista[1].Attack(Lény.lista[0]);
+                        Console.WriteLine(Lény.lista[0]);
+                    }
+                }
 
-            Console.WriteLine(Gyuszó);
-            Console.WriteLine(Csege);
+                if (Gyuszó.Él)
+                {
+                    //Console.WriteLine("Gyuszó won.");
+                    gyuszowon++;
+                }
+                else
+                {
+                    //Console.WriteLine("Csege won.");
+                    csegewon++;
+                }
+            }
 
-            Gyuszó.Attack(Csege);
-
-            Console.WriteLine(Gyuszó);
-            Console.WriteLine(Csege);
-
-            Csege.Attack(Gyuszó);
-
-            Console.WriteLine(Gyuszó);
-            Console.WriteLine(Csege);
-
+            Console.WriteLine($"Csege:{csegewon}, Gyuszó: {gyuszowon}");
 
             Console.ReadKey();
         }
