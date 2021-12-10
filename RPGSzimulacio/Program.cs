@@ -43,7 +43,7 @@ namespace RPGSzimulacio
 
             }
 
-
+            public static Lény Pick(IEnumerable<Lény> lista) => lista.ElementAt(g.Next(lista.Count()));
 
 
             public static void Randomsorrend() // Fisher-Yates algoritmus?
@@ -61,6 +61,8 @@ namespace RPGSzimulacio
             {
                 return null;
             }
+
+            public List<Lény> Másikcsapat() => Játékosok.Contains(this) ? Ellen : Játékosok;
         }
 
         class Barbár:Lény
@@ -88,11 +90,8 @@ namespace RPGSzimulacio
                 }
             }
 
-            public virtual Lény RandomEllenfél() 
-            {
-                List<Lény> másikcsapat = Játékosok.Contains(this)?Ellen:Játékosok;
-
-            }
+            public override Lény RandomEllenfél() => Lény.Pick(Másikcsapat().Where(x => x.Él));
+            
         }
 
         class Mágus : Lény
@@ -108,6 +107,8 @@ namespace RPGSzimulacio
                 ellen.hp -= g.Next(mindmg, maxdmg);
                 //Console.WriteLine($"{this.nev} megütötte {ellen.nev}-t!");
             }
+            public override Lény RandomEllenfél() => Lény.Pick(Másikcsapat().Where(x => x.Él));
+
         }
 
         class Healer : Lény
@@ -121,6 +122,11 @@ namespace RPGSzimulacio
             public override void Attack(Lény ellen) // Így gyógyít
             {
                 ellen.hp += g.Next(mindmg, maxdmg);
+            }
+            public override Lény RandomEllenfél()
+            {
+                List<Lény> ezacsapat = Játékosok.Contains(this) ?  Játékosok: Ellen;
+                return Lény.Pick(ezacsapat.Where(x => x.Él));
             }
 
         }
@@ -137,30 +143,68 @@ namespace RPGSzimulacio
             {
                 ellen.hp -= g.Next(mindmg, maxdmg);
             }
+            public override Lény RandomEllenfél() => Lény.Pick(Másikcsapat().Where(x => x.Él));
+
         }
 
         static void Main(string[] args)
         {
             //Lény Bence = new Lény("Bence",40,9,20);
+            Barbár Matyi = new Barbár("Matyi", 70, 30, 45, "PC");
+            Barbár Levente = new Barbár("Levente", 70, 35, 40, "PC");
+            Barbár Kókusz = new Barbár("Kókusz", 100, 35, 45, "PC");
             Barbár Gyuszó = new Barbár("Gyuszó", 60, 15, 35, "PC");
+            Barbár Zsolt = new Barbár("Zsolt", 40, 25, 40, "PC");
             Mágus Csege = new Mágus("Csege", 25, 30, 40, "PC");
-            Healer Farkas = new Healer("Farkas", 30, 10, 20, "PC"); // ez ennyit gyógyít
-            BBB Sziszi = new BBB("Sziszi", 500, 15, 30, "NPC"); // ez ennyit gyógyít
+            Mágus Máté = new Mágus("Máté", 25, 30, 40, "PC");
+            Healer Balu = new Healer("Balu", 35, 10, 20, "PC"); // ez ennyit gyógyít
+            Healer Farkas = new Healer("Farkas", 35, 10, 20, "PC"); // ez ennyit gyógyít
+            BBB Minotaurusz = new BBB("Minotaurusz", 200, 20, 50, "NPC");
+            BBB Sziszi = new BBB("Sziszi", 200, 40, 40, "NPC");
+            BBB Vince = new BBB("Vince", 200, 25, 40, "NPC");
 
+            /** /
+            for (int i = 0; i < 50; i++)
+                new BBB("goblin", 15, 0, 2, "NPC");
+            /**/
             int npcwon = 0;
             int pcwon = 0;
 
-            for (int db = 0; db < 5000; db++)
+            int N = 30;
+
+            for (int db = 0; db < N; db++)
             {
-                Lény.Randomsorrend();
+                while (Lény.Játékosok.Any(x=> x.Él) && Lény.Ellen.Any(x => x.Él))
+                {
+                    Lény.Randomsorrend();
+                    foreach (Lény lény in Lény.lista)
+                    {
+                        if (lény.Él && lény.Másikcsapat().Any(x=>x.Él))
+                        {
+                            Lény ellenfél = lény.RandomEllenfél();
+                            lény.Attack(ellenfél);
+                            if (!ellenfél.Él)
+                            {
+                                //Console.WriteLine($"{ellenfél.nev} elesett.");
+                            }
+                        }
+                    }
+                }
+                if (Lény.Játékosok.Any(x => x.Él))
+                {
+                    pcwon++;
+                }
+                else
+                {
+                    npcwon++;
+                }
                 foreach (Lény lény in Lény.lista)
                 {
-                    if (lény.Él)
-                        lény.Attack(lény.RandomEllenfél());
+                    lény.Feltámad();
                 }
             }
 
-            Console.WriteLine($"Játékosok:{pcwon}, Sziszi: {npcwon}, tehát az arány: {(double)pcwon/5000}");
+            Console.WriteLine($"Játékosok:{pcwon}, Ellen: {npcwon}, tehát az arány: {(double)pcwon/N}");
             Console.ReadKey();
         }
     }
