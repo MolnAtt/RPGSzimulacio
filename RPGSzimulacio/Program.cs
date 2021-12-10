@@ -131,7 +131,7 @@ namespace RPGSzimulacio
                     lény.Feltámad();
                 }
             }
-            Console.WriteLine($"Csege:{csegewon}, Gyuszó: {gyuszowon}");
+            Console.WriteLine($"Csege:{csegewon}, Gyuszó: {gyuszowon}, tehát az arány: {(double)csegewon/(double)gyuszowon}");
             Console.ReadKey();
         }
     }
