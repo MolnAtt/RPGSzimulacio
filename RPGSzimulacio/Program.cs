@@ -18,15 +18,22 @@ namespace RPGSzimulacio
             protected int maxdmg;
             protected static Random g = new Random();
             public static List<Lény> lista = new List<Lény>();
+            public static List<Lény> Játékosok = new List<Lény>();
+            public static List<Lény> Ellen = new List<Lény>();
+
 
             public bool Él { get => 0 < hp; }
-            public Lény(string nev, int hp, int mindmg, int maxdmg)
+            public Lény(string nev, int hp, int mindmg, int maxdmg, string csapat)
             {
                 this.nev = nev;
                 this.maxhp = hp;
                 this.hp = this.maxhp;
                 this.mindmg = mindmg;
                 this.maxdmg = maxdmg;
+                if (csapat=="NPC")
+                    Lény.Ellen.Add(this);
+                else if (csapat == "PC")
+                    Lény.Játékosok.Add(this);
                 Lény.lista.Add(this);
             }
 
@@ -35,6 +42,8 @@ namespace RPGSzimulacio
             { 
 
             }
+
+
 
 
             public static void Randomsorrend() // Fisher-Yates algoritmus?
@@ -47,13 +56,18 @@ namespace RPGSzimulacio
             }
 
             public void Feltámad() => hp = maxhp;
+
+            public virtual Lény RandomEllenfél()
+            {
+                return null;
+            }
         }
 
         class Barbár:Lény
         {
             bool kipihent;
 
-            public Barbár(string nev, int hp, int mindmg, int maxdmg):base(nev, hp, mindmg, maxdmg)
+            public Barbár(string nev, int hp, int mindmg, int maxdmg, string csapat) : base(nev, hp, mindmg, maxdmg, csapat)
             {
                 kipihent = true;
             }
@@ -73,11 +87,17 @@ namespace RPGSzimulacio
                     kipihent = true;
                 }
             }
+
+            public virtual Lény RandomEllenfél() 
+            {
+                List<Lény> másikcsapat = Játékosok.Contains(this)?Ellen:Játékosok;
+
+            }
         }
 
         class Mágus : Lény
         {
-            public Mágus(string nev, int hp, int mindmg, int maxdmg) : base(nev, hp, mindmg, maxdmg)
+            public Mágus(string nev, int hp, int mindmg, int maxdmg, string csapat) : base(nev, hp, mindmg, maxdmg, csapat)
             {
 
             }
@@ -90,48 +110,57 @@ namespace RPGSzimulacio
             }
         }
 
+        class Healer : Lény
+        {
+            public Healer(string nev, int hp, int mindmg, int maxdmg, string csapat) : base(nev, hp, mindmg, maxdmg, csapat)
+            {
 
+            }
+            public override string ToString() => $"kaszt: Kuruzsló\n" + base.ToString();
+
+            public override void Attack(Lény ellen) // Így gyógyít
+            {
+                ellen.hp += g.Next(mindmg, maxdmg);
+            }
+
+        }
+
+        class BBB : Lény
+        {
+            public BBB(string nev, int hp, int mindmg, int maxdmg, string csapat) : base(nev, hp, mindmg, maxdmg, csapat)
+            {
+
+            }
+            public override string ToString() => $"kaszt: Big Bad Boss\n" + base.ToString();
+
+            public override void Attack(Lény ellen) // Így gyógyít
+            {
+                ellen.hp -= g.Next(mindmg, maxdmg);
+            }
+        }
 
         static void Main(string[] args)
         {
             //Lény Bence = new Lény("Bence",40,9,20);
-            Barbár Gyuszó = new Barbár("Gyuszó", 60, 15, 35);
-            Mágus Csege = new Mágus("Csege", 20, 30, 40);
+            Barbár Gyuszó = new Barbár("Gyuszó", 60, 15, 35, "PC");
+            Mágus Csege = new Mágus("Csege", 25, 30, 40, "PC");
+            Healer Farkas = new Healer("Farkas", 30, 10, 20, "PC"); // ez ennyit gyógyít
+            BBB Sziszi = new BBB("Sziszi", 500, 15, 30, "NPC"); // ez ennyit gyógyít
 
-            int csegewon = 0;
-            int gyuszowon = 0;
+            int npcwon = 0;
+            int pcwon = 0;
 
-            for (int i = 0; i < 5000; i++)
+            for (int db = 0; db < 5000; db++)
             {
-                while (Gyuszó.Él && Csege.Él) // Mortal Kombat
-                {
-                    Lény.Randomsorrend();
-                    Lény.lista[0].Attack(Lény.lista[1]);
-                    //Console.WriteLine(Lény.lista[1]);
-                    if (Lény.lista[1].Él)
-                    {
-                        Lény.lista[1].Attack(Lény.lista[0]);
-                        //Console.WriteLine(Lény.lista[0]);
-                    }
-                }
-
-                if (Gyuszó.Él)
-                {
-                    //Console.WriteLine("Gyuszó won.");
-                    gyuszowon++;
-                }
-                else
-                {
-                    //Console.WriteLine("Csege won.");
-                    csegewon++;
-                }
-
+                Lény.Randomsorrend();
                 foreach (Lény lény in Lény.lista)
                 {
-                    lény.Feltámad();
+                    if (lény.Él)
+                        lény.Attack(lény.RandomEllenfél());
                 }
             }
-            Console.WriteLine($"Csege:{csegewon}, Gyuszó: {gyuszowon}, tehát az arány: {(double)csegewon/(double)gyuszowon}");
+
+            Console.WriteLine($"Játékosok:{pcwon}, Sziszi: {npcwon}, tehát az arány: {(double)pcwon/5000}");
             Console.ReadKey();
         }
     }
