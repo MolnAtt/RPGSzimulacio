@@ -12,6 +12,7 @@ namespace RPGSzimulacio
         class Lény
         {
             public string nev;
+            private int maxhp;
             public int hp;
             protected int mindmg;
             protected int maxdmg;
@@ -22,7 +23,8 @@ namespace RPGSzimulacio
             public Lény(string nev, int hp, int mindmg, int maxdmg)
             {
                 this.nev = nev;
-                this.hp = hp;
+                this.maxhp = hp;
+                this.hp = this.maxhp;
                 this.mindmg = mindmg;
                 this.maxdmg = maxdmg;
                 Lény.lista.Add(this);
@@ -43,6 +45,8 @@ namespace RPGSzimulacio
                     (lista[i], lista[r]) = (lista[r], lista[i]);
                 }
             }
+
+            public void Feltámad() => hp = maxhp;
         }
 
         class Barbár:Lény
@@ -61,11 +65,11 @@ namespace RPGSzimulacio
                 {
                     ellen.hp -= g.Next(mindmg, maxdmg);
                     kipihent = false;
-                    Console.WriteLine($"{this.nev} megütötte {ellen.nev}-t! Most viszont elfáradt");
+                   // Console.WriteLine($"{this.nev} megütötte {ellen.nev}-t! Most viszont elfáradt");
                 }
                 else
                 {
-                    Console.WriteLine($"{this.nev} megütné {ellen.nev}-t, de fáradt, úgyhogy inkább pihen.");
+                   // Console.WriteLine($"{this.nev} megütné {ellen.nev}-t, de fáradt, úgyhogy inkább pihen.");
                     kipihent = true;
                 }
             }
@@ -82,7 +86,7 @@ namespace RPGSzimulacio
             public override void Attack(Lény ellen)
             {
                 ellen.hp -= g.Next(mindmg, maxdmg);
-                Console.WriteLine($"{this.nev} megütötte {ellen.nev}-t!");
+                //Console.WriteLine($"{this.nev} megütötte {ellen.nev}-t!");
             }
         }
 
@@ -99,17 +103,15 @@ namespace RPGSzimulacio
 
             for (int i = 0; i < 5000; i++)
             {
-
-
                 while (Gyuszó.Él && Csege.Él) // Mortal Kombat
                 {
                     Lény.Randomsorrend();
                     Lény.lista[0].Attack(Lény.lista[1]);
-                    Console.WriteLine(Lény.lista[1]);
+                    //Console.WriteLine(Lény.lista[1]);
                     if (Lény.lista[1].Él)
                     {
                         Lény.lista[1].Attack(Lény.lista[0]);
-                        Console.WriteLine(Lény.lista[0]);
+                        //Console.WriteLine(Lény.lista[0]);
                     }
                 }
 
@@ -123,10 +125,13 @@ namespace RPGSzimulacio
                     //Console.WriteLine("Csege won.");
                     csegewon++;
                 }
+
+                foreach (Lény lény in Lény.lista)
+                {
+                    lény.Feltámad();
+                }
             }
-
             Console.WriteLine($"Csege:{csegewon}, Gyuszó: {gyuszowon}");
-
             Console.ReadKey();
         }
     }
